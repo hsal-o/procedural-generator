@@ -280,8 +280,12 @@ class MainView:
         self.widget_map[ctrl_var] = tk.BooleanVar()
         self.widget_map[ctrl_var].set(def_val)
 
+        # Container frame
+        container = tk.Frame(root, background=root.cget("background"))
+        container.pack(fill=tk.BOTH, padx=(self.padding["small"],self.padding["regular"]), pady=(0, self.padding["small"]))
+
         # Create checkbox and assign it the control variable
-        checkbox = tk.Checkbutton(root, text=f"{label}:", variable=self.widget_map[ctrl_var], background=root.cget("bg"))
+        checkbox = tk.Checkbutton(container, text=f"{label}:", variable=self.widget_map[ctrl_var], background=container.cget("bg"))
         checkbox.pack(side=tk.LEFT, fill=tk.BOTH)
 
     # ------------------------------------------------------------------------------

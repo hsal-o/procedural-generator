@@ -30,7 +30,7 @@ class MidpointDisplacementView(AlgorithmView):
         self.mv.create_dual_entry(root, "End (x, y)",   self.entry_end_x, self.entry_end_y, self.mv.get_entry_width()-1, self.mv.get_entry_height()-1)
 
         # Add Checkboxes
-        self.mv.create_single_checkbox(root, "Randomize Line Thickess", self.cbox_randomize_stroke_thickness, True)
+        self.mv.create_single_checkbox(root, "Randomize Line Thickess", self.cbox_randomize_stroke_thickness, def_val=True)
 
         # print(f"Created section for {self.full_name}!")
 

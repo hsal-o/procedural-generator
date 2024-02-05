@@ -17,27 +17,38 @@ class BinarySpacePartitionModel(AlgorithmModel):
     def run(self, variables):
         self.raw_rooms = []
         self.built_rooms = []
+        
+        self.side_left = 0
+        self.side_top = 1
+        self.side_right = 2
+        self.side_bottom = 3
+
+        self.min_width = variables["min_width"]
+        self.min_height = variables["min_height"]
+        self.hallway_stroke_thickness = variables["hallway_stroke_thickness"]
+
         self.generate_cut((variables["x1"], variables["y1"]),
                           (variables["x2"]+1, variables["y2"]+1),
                           0,
-                          variables["iterations"])
-        
-        print(f"len(self.built_rooms):{len(self.built_rooms)}")
+                          variables["iterations"],
+                          variables["do_connect_rooms"])
 
-        self.connect_rooms(self.built_rooms)
     
 
     ################################################################################
     # Algorithm specific methods
     ################################################################################
-    def generate_cut(self, start_coord, end_coord, iteration_count, max_iteration_count):
+    def generate_cut(self, start_coord, end_coord, iteration_count, max_iteration_count, do_connect_rooms):
         x1, y1 = start_coord
         x2, y2 = end_coord
 
-        if(iteration_count >= max_iteration_count):
+        # if(iteration_count >= max_iteration_count):
+        if(iteration_count >= max_iteration_count or
+           x2 - x1 < self.min_width or
+           y2 - y1 < self.min_height):
+            
             raw_room = Room(start_coord, end_coord)
-            self.built_rooms.append(self.generate_single_room(raw_room))
-            return # Break case
+            return([self.generate_single_room(raw_room)])
         
         def cut_vertical(x1, y1, x2, y2):
             bound = (x2-x1) // 3
@@ -72,16 +83,75 @@ class BinarySpacePartitionModel(AlgorithmModel):
             elif(cut_direction == 1): # Horizontal cut
                 m_start_coord, m_end_coord = cut_horizontal(x1, y1, x2, y2)
      
-        self.generate_cut(start_coord, m_end_coord, iteration_count + 1, max_iteration_count)
-        self.generate_cut(m_start_coord, end_coord, iteration_count + 1, max_iteration_count)
+        alpha_rooms = self.generate_cut(start_coord, m_end_coord, iteration_count + 1, max_iteration_count, do_connect_rooms)
+        beta_rooms = self.generate_cut(m_start_coord, end_coord, iteration_count + 1, max_iteration_count, do_connect_rooms)
+        if(do_connect_rooms):
+            self.conjoin_rooms(alpha_rooms, beta_rooms)
+
+        return alpha_rooms + beta_rooms
 
 
-    def connect_rooms(self, built_rooms):
-        for i in range(len(built_rooms)-1):
-            room_1 = built_rooms[i]
-            room_2 = built_rooms[i+1]
+    def conjoin_rooms(self, alpha_rooms, beta_rooms):
+        def rooms_overlap_x_range(a_room, b_room):
+            return max(a_room.x1, b_room.x1) <= min(a_room.x2, b_room.x2)
+        
+        def rooms_overlap_y_range(a_room, b_room):
+            return max(a_room.y1, b_room.y1) <= min(a_room.y2, b_room.y2)
 
-            self.connect_points(room_1.center_coord, room_2.center_coord, stroke_thickness=1, do_random_thickness=False)
+        room_seperation_distance = 2
+        for a_room in alpha_rooms:
+            for b_room in beta_rooms:
+                # [b_room][a_room] connection
+                # if(a_room.x1-1 == b_room.x2):
+                if(b_room.x2 - a_room.x1 == room_seperation_distance):
+                    if(rooms_overlap_y_range(a_room, b_room)):
+                        self.connect_rooms(a_room, b_room, self.side_left)
+                        return
+                    
+                # [b_room]
+                # [a_room] connection
+                # elif(a_room.y1-1 == b_room.y2):
+                elif(b_room.y2 - a_room.y1 == room_seperation_distance):
+                    if(rooms_overlap_x_range(a_room, b_room)):
+                        self.connect_rooms(a_room, b_room, self.side_top)
+                        return
+
+                # [a_room][b_room] connection
+                # elif(a_room.x2+1 == b_room.x1):
+                elif(b_room.x1 - a_room.x2 == room_seperation_distance):
+                    if(rooms_overlap_y_range(a_room, b_room)):
+                        self.connect_rooms(a_room, b_room, self.side_right)
+                        return
+                    
+                # [a_room]
+                # [b_room] connection
+                # elif(a_room.y2+1 == b_room.y1):
+                elif(b_room.y1 - a_room.y2 == room_seperation_distance):
+                    if(rooms_overlap_x_range(a_room, b_room)):
+                        self.connect_rooms(a_room, b_room, self.side_bottom)
+                        return
+                
+                else: # Rooms are not neighbors
+                    continue
+
+    def connect_rooms(self, room_1, room_2, side):
+        if(side == self.side_left):
+            room_1_coord = (room_1.x1, (room_1.y1+room_1.y2) // 2)
+            room_2_coord = (room_2.x2, (room_2.y1+room_2.y2) // 2)
+
+        elif(side == self.side_top):
+            room_1_coord = ((room_1.x1+room_1.x2) // 2, room_1.y1)
+            room_2_coord = ((room_2.x1+room_2.x2) // 2, room_2.y2)
+
+        elif(side == self.side_right):
+            room_1_coord = (room_1.x2, (room_1.y1+room_1.y2) // 2)
+            room_2_coord = (room_2.x1, (room_2.y1+room_2.y2) // 2)
+
+        elif(side == self.side_bottom):
+            room_1_coord = ((room_1.x1+room_1.x2) // 2, room_1.y2)
+            room_2_coord = ((room_2.x1+room_2.x2) // 2, room_2.y1)
+
+        self.connect_points(room_1_coord, room_2_coord, stroke_thickness=self.hallway_stroke_thickness, do_random_thickness=False)
 
 
     def generate_single_room(self, room):
@@ -158,5 +228,6 @@ class BinarySpacePartitionModel(AlgorithmModel):
                 y1 += sy
 
         # Paint last cell
-        self.grid[y2-1][x2-1] = 0
+        if(stroke_thickness > 0):
+            self.grid[y2-1][x2-1] = 0
 

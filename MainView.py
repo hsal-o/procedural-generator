@@ -433,12 +433,12 @@ class MainView:
     def generate_button_on_click(self):
         self.toggle_section_grid_manipulation(True)
  
-        try:
+        # try:
             # Run algorithm's button click implementation
-            self.algorithm_view.view.generate_button_on_click(self.get_entry_value_bool(self.cbox_using_seed))
+        self.algorithm_view.view.generate_button_on_click(self.get_entry_value_bool(self.cbox_using_seed))
         
-        except Exception as error:
-            messagebox.showerror("Error", error)
+        # except Exception as error:
+        #     messagebox.showerror("Error", error)
 
     def button_export_on_click(self):
         self.algorithm_view.view.button_export_on_click((self.algorithm_view.view.full_name).replace(" ", "_"))

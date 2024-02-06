@@ -2,9 +2,11 @@ import os
 import importlib
 import tkinter as tk
 from tkinter import ttk, messagebox
+import cv2
 from PIL import Image, ImageGrab, ImageTk
 from datetime import datetime
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from graders.RoughnessGrader import RoughnessGrader
 
 class Tab:
     def __init__(self, full_name, nickname, color, view, order):
@@ -48,6 +50,7 @@ class MainView:
         self.button_flip_x = "button_flip_x"
         self.button_flip_y = "button_flip_y"
         self.button_generate = "button_generate"
+        self.button_grade = "button_grade"
         self.button_screenshot_screen = "button_screenshot_screen"
         self.button_screenshot_grid = "button_screenshot_grid"
 
@@ -199,7 +202,7 @@ class MainView:
         desired_size = (grid_width * multiplier, grid_height * multiplier)
 
         # Resize the image to the desired size while maintaining the aspect ratio
-        image = image.resize(desired_size, Image.NEAREST)  # Use NEAREST for nearest-neighbor interpolation
+        image = image.resize(desired_size, Image.Resampling.NEAREST)  # Use NEAREST for nearest-neighbor interpolation
 
 
         image.save(file_name)
@@ -334,7 +337,7 @@ class MainView:
         if width is not None: self.widget_map[button].config(width=width)
         if height is not None: self.widget_map[button].config(height=height)
         if bg is not None: self.widget_map[button].config(bg=bg)
-        self.widget_map[button].pack(fill=tk.BOTH, expand=True, padx=self.padding["small"], pady=self.padding["small"])
+        self.widget_map[button].pack(fill=tk.BOTH, expand=True, padx=self.padding["small"], pady=(0, self.padding["regular"]))
 
     # Dual Button
     def create_dual_buttons(self, root, label_1, button_1, on_click_1, label_2, button_2, on_click_2):
@@ -431,6 +434,7 @@ class MainView:
         # Create sections within container
         self.create_section_grid_configuration(container)
         self.create_section_grid_generation(container)
+        self.create_section_screenshot(container)
         self.create_section_grid_manipulation(container)
 
     # Configuration section creation    
@@ -449,7 +453,7 @@ class MainView:
         # Create container
         self.section_grid_manipulation = "section_grid_manipulation"
         self.widget_map[self.section_grid_manipulation] = tk.LabelFrame(root, text="Grid Manipulation", background=root.cget("bg"))
-        self.widget_map[self.section_grid_manipulation].pack(fill=tk.X, padx=self.padding["regular"], pady=self.padding["regular"])
+        self.widget_map[self.section_grid_manipulation].pack(fill=tk.X, padx=self.padding["regular"], pady=(0, self.padding["regular"]))
 
         # Add Widgets
         self.create_dual_buttons(self.widget_map[self.section_grid_manipulation], label_1="Export Grid", button_1=self.button_export, on_click_1=self.button_export_on_click, 
@@ -468,6 +472,19 @@ class MainView:
                     continue
                 child.configure(state=new_state)
 
+    def create_section_screenshot(self, root):
+        container = tk.LabelFrame(root, text="Screenshot", background=root.cget("bg"))
+        container.pack(fill=tk.X, padx=self.padding["regular"], pady=(0, self.padding["regular"]))
+
+        self.create_dual_buttons(container, 
+                                 label_1="Screen", 
+                                 button_1=self.button_screenshot_screen, 
+                                 on_click_1=self.button_screenshot_screen_on_click, 
+                                 label_2="Grid", 
+                                 button_2=self.button_screenshot_grid, 
+                                 on_click_2=self.button_screenshot_grid_on_click)
+
+
     # Generation section creation  
     def create_section_grid_generation(self, root):
         # Create container
@@ -476,18 +493,48 @@ class MainView:
 
         # Add Widgets
         self.create_button(container, "GENERATE", self.button_generate, on_click=self.generate_button_on_click, height=2, bg="#D6DBDF")
-        self.create_button(container, "SCREENSHOT SCREEN", self.button_screenshot_screen, on_click=self.button_screenshot_screen_on_click, height=2, bg="#F8F9F9")
-        self.create_button(container, "SCREENSHOT GRID", self.button_screenshot_grid, on_click=self.button_screenshot_grid_on_click, height=2, bg="#F8F9F9")
+        self.create_button(container, "GRADE", self.button_grade, on_click=self.grade_button_on_click, height=2, bg="#F8F9F9")
+        
+        # self.create_button(container, "SCREENSHOT SCREEN", self.button_screenshot_screen, on_click=self.button_screenshot_screen_on_click, height=2, bg="#F8F9F9")
+        # self.create_button(container, "SCREENSHOT GRID", self.button_screenshot_grid, on_click=self.button_screenshot_grid_on_click, height=2, bg="#F8F9F9")
 
     def generate_button_on_click(self):
         self.toggle_section_grid_manipulation(True)
  
-        # try:
-            # Run algorithm's button click implementation
         self.algorithm_view.view.generate_button_on_click(self.get_entry_value_bool(self.cbox_using_seed))
         
-        # except Exception as error:
-        #     messagebox.showerror("Error", error)
+    ################################################################################
+    # TRANSFER THIS TO CONTROLLER CLASS?
+    ################################################################################
+    def grade_button_on_click(self):
+        # Proof of Concept
+        roughness_grader = RoughnessGrader()
+
+        raw_grid_figure = self.algorithm_view.view.get_raw_grid_figure()
+        image_path = cv2.imread(self.generate_image_path(raw_grid_figure), cv2.IMREAD_UNCHANGED)
+
+        print(f"Roughness:{roughness_grader.get_score(image_path)}")
+
+
+    def generate_image_path(self, raw_grid_figure):
+        # CHECK IF tmp FOLDER EXISTS
+        image_path = "tmp/tmp.png" # Assumes tmp folder exists
+
+        grid_height = raw_grid_figure.shape[0]  
+        grid_width = raw_grid_figure[0].shape[0]
+        image = Image.fromarray(raw_grid_figure)
+
+        multiplier = 20
+        desired_size = (grid_width * multiplier, grid_height * multiplier)
+
+        # Resize the image to the desired size while maintaining the aspect ratio
+        image = image.resize(desired_size, Image.Resampling.NEAREST) 
+
+        image.save(image_path)
+
+        return image_path
+
+    ################################################################################
 
     def button_export_on_click(self):
         self.algorithm_view.view.button_export_on_click((self.algorithm_view.view.full_name).replace(" ", "_"))

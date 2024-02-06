@@ -416,7 +416,7 @@ class MainView:
     ################################################################################
     def create_input_frame(self, root):
         # Create container for inputs
-        container = tk.Frame(self.root)
+        container = tk.Frame(root)
         container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Create generic + specific frames within container
@@ -495,9 +495,6 @@ class MainView:
         self.create_button(container, "GENERATE", self.button_generate, on_click=self.generate_button_on_click, height=2, bg="#D6DBDF")
         self.create_button(container, "GRADE", self.button_grade, on_click=self.grade_button_on_click, height=2, bg="#F8F9F9")
         
-        # self.create_button(container, "SCREENSHOT SCREEN", self.button_screenshot_screen, on_click=self.button_screenshot_screen_on_click, height=2, bg="#F8F9F9")
-        # self.create_button(container, "SCREENSHOT GRID", self.button_screenshot_grid, on_click=self.button_screenshot_grid_on_click, height=2, bg="#F8F9F9")
-
     def generate_button_on_click(self):
         self.toggle_section_grid_manipulation(True)
  
@@ -574,7 +571,7 @@ class MainView:
 
     def create_tab(self, root, tab):
         # Create container
-        container = tk.Frame(self.root, bg=tab.color)
+        container = tk.Frame(root, bg=tab.color)
         container.pack(side=tk.LEFT)
 
         # Create label header
@@ -630,8 +627,40 @@ class MainView:
         self.root = tk.Tk()
         self.root.title("Cave Generation")
 
+
+        # Create notebook tab style
+        style = ttk.Style(self.root)
+        style.configure('TopTab.TNotebook', tabposition='nw', background=self.colors["gray-500"])
+        # Create container
+        container = ttk.Notebook(self.root, style="TopTab.TNotebook")
+        container.pack(fill=tk.BOTH, expand=True)
+
+        # Create tabs
+        self.create_generation_tab(container)
+        self.create_grader_tab(container)
+
+    def create_generation_tab(self, root):
+        # Create container 
+        container = tk.Frame(root)
+        container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
         # Create input and output frames
-        self.create_input_frame(self.root)
-        self.create_output_frame(self.root)
+        self.create_input_frame(container)
+        self.create_output_frame(container)
+
+        # Add container to root
+        root.add(container, text="Generation")
+
+    def create_grader_tab(self, root):
+        # Create container
+        container = tk.Frame(root)
+        container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Create label header
+        label_header = tk.Label(container, text=f"Grader Tab", font=("Helvetica", 12, "bold"), background=container.cget("bg"))
+        label_header.pack()
+
+        # Add container to root
+        root.add(container, text="Grader")
 
 view = MainView()

@@ -89,4 +89,6 @@ class AlgorithmController(ABC):
 
         return figure
 
+    def get_raw_grid_figure(self):
+        return self.model.get_grid()
     

@@ -32,9 +32,6 @@ class BinarySpacePartitionView(AlgorithmView):
         # Add Checkboxes
         self.mv.create_single_checkbox(root, "Connect Rooms", self.cbox_connect_rooms, def_val=True)
 
-    # Override implementation
-    def create_section_manipulation(self, root):
-        return False
 
     # Override implementation
     def get_variables(self):

@@ -27,9 +27,6 @@ class RandomWalkView(AlgorithmView):
         self.mv.create_single_checkbox(root, "Randomize Start Position", self.cbox_randomize_start, def_val=False)
         # self.mv.create_single_checkbox(root, "Randomize Stroke Thickness", self.cbox_randomize_stroke_thickness, def_val=False)
 
-    # Override implementation
-    def create_section_manipulation(self, root):
-        return False
 
     # Override implementation
     def get_variables(self):

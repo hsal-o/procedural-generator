@@ -20,7 +20,7 @@ class AlgorithmModel(ABC):
     def get_grid(self):
         color_grid = self.color_grid(self.grid)
         return np.array(color_grid, dtype=np.uint8)
-    
+
     def get_width(self):
         return self.width
     

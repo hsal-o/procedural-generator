@@ -32,7 +32,6 @@ class CellularAutomataView(AlgorithmView):
     # Override implementation
     def create_section_manipulation(self, root):
         self.mv.create_button(root, "Single Iteration", self.button_iteration, on_click=self.controller.generate_iteration, state="disabled")
-
         return True
 
     # Override implementation

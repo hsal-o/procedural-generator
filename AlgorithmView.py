@@ -37,6 +37,9 @@ class AlgorithmView(ABC):
     def get_nickname(self):
         return self.nickname
     
+    def get_raw_grid_figure(self):
+        return self.controller.get_raw_grid_figure()
+    
     ################################################################################
     # Setters
     ################################################################################
@@ -75,11 +78,13 @@ class AlgorithmView(ABC):
         # self.mv.create_single_label(root, "Implement me!", label_missing_implement)
         pass
 
-    @abstractmethod
     def create_section_manipulation(self, root):
         # label_missing_implement = "label_missing_implement"
         # self.mv.create_single_label(root, "Implement me!", label_missing_implement)
-        pass
+        return False
+    
+    def create_section_presets(self, root):
+        return False
 
     ################################################################################
     # Generation

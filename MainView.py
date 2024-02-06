@@ -48,7 +48,8 @@ class MainView:
         self.button_flip_x = "button_flip_x"
         self.button_flip_y = "button_flip_y"
         self.button_generate = "button_generate"
-        self.button_screenshot = "button_screenshot"
+        self.button_screenshot_screen = "button_screenshot_screen"
+        self.button_screenshot_grid = "button_screenshot_grid"
 
         # Padding variables
         self.small_padding_y = 5
@@ -132,9 +133,14 @@ class MainView:
         if(previously_disabled):
             self.widget_map[self.entry_seed].config(state="readonly")
 
-    def set_entry_value(self, entry, value):
+    def set_entry_value(self, entry, value, state="normal"):
         self.widget_map[entry].delete(0, tk.END) 
-        self.widget_map[entry].insert(0, value)
+
+        if(value != None):
+            self.widget_map[entry].insert(0, value)
+
+
+        self.widget_map[entry].configure(state=state)
 
     def toggle_widget_state(self, entry, new_state):
         self.widget_map[entry].config(state=new_state)
@@ -155,7 +161,7 @@ class MainView:
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-    def button_screenshot_on_click(self):
+    def button_screenshot_screen_on_click(self):
         # Get the Tkinter window dimensions
         x = self.root.winfo_rootx()
         y = self.root.winfo_rooty()
@@ -169,10 +175,40 @@ class MainView:
         # screenshot.save(file_name)
         self.show_screenshot_popup(screenshot)
 
+    def button_screenshot_grid_on_click(self):
+       # Create the "screenshots" folder if it doesn't exist
+        screenshots_folder = "grid-screenshots"
+        os.makedirs(screenshots_folder, exist_ok=True)
+
+        # Get the current date and time
+        current_datetime = datetime.now()
+        time_stamp = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+
+        # Formulate the filename based on the timestamp
+        file_name = f"{screenshots_folder}/{time_stamp}_Grid.png"
+        
+        # Create Image
+        raw_grid_figure = self.algorithm_view.view.get_raw_grid_figure()
+        grid_height = raw_grid_figure.shape[0]  
+        grid_width = raw_grid_figure[0].shape[0]
+        image = Image.fromarray(raw_grid_figure)
+
+        # Determine the desired size of the image based on the grid size
+        # Here we are setting a multiplier to increase the size of the image
+        multiplier = 20
+        desired_size = (grid_width * multiplier, grid_height * multiplier)
+
+        # Resize the image to the desired size while maintaining the aspect ratio
+        image = image.resize(desired_size, Image.NEAREST)  # Use NEAREST for nearest-neighbor interpolation
+
+
+        image.save(file_name)
+        image.show()
+
     def show_screenshot_popup(self, screenshot):
         def save_screenshot():
             # Create the "screenshots" folder if it doesn't exist
-            screenshots_folder = "screenshots"
+            screenshots_folder = "screen-screenshots"
             os.makedirs(screenshots_folder, exist_ok=True)
 
             # Get the current date and time
@@ -232,7 +268,7 @@ class MainView:
     # Entry creators
     # ------------------------------------------------------------------------------
     # Single Entry
-    def create_single_entry(self, root, label_text, entry, def_val):
+    def create_single_entry(self, root, label_text, entry, def_val=""):
         # Container frame
         container = tk.Frame(root, background=root.cget("background"))
         container.pack(fill=tk.BOTH, padx=(self.padding["small"],self.padding["regular"]), pady=(self.padding["small"]))
@@ -247,7 +283,7 @@ class MainView:
         self.widget_map[entry].insert(0, def_val) 
 
     # Dual Entry - Single label
-    def create_dual_entry(self, root, label, entry_1, entry_2, def_val_1, def_val_2):
+    def create_dual_entry(self, root, label, entry_1, entry_2, def_val_1="", def_val_2=""):
         # Create container 
         container = tk.Frame(root, background=root.cget("background"))
         container.pack(fill=tk.BOTH, padx=(self.padding["small"],self.padding["regular"]), pady=(self.padding["small"]))
@@ -275,7 +311,7 @@ class MainView:
     # ------------------------------------------------------------------------------
     # Checkbox creators
     # ------------------------------------------------------------------------------
-    def create_single_checkbox(self, root, label, ctrl_var, def_val):
+    def create_single_checkbox(self, root, label, ctrl_var, def_val=False):
         # Instantiate control variable
         self.widget_map[ctrl_var] = tk.BooleanVar()
         self.widget_map[ctrl_var].set(def_val)
@@ -313,6 +349,18 @@ class MainView:
         # Create right button
         self.widget_map[button_2] = tk.Button(container, text=f"{label_2}", command=on_click_2)
         self.widget_map[button_2].pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(self.padding["small"], 0))
+
+    # ------------------------------------------------------------------------------
+    # Radio Button creators
+    # ------------------------------------------------------------------------------
+    def create_radio_button(self, root, label, radio_button, variable, value, command=None):
+        # Create container
+        container = tk.Frame(root, background=root.cget("bg"))
+        container.pack(fill=tk.BOTH, expand=True, padx=self.padding["small"], pady=(0, self.padding["small"]))
+
+        # Create Radio Button
+        self.widget_map[radio_button] = tk.Radiobutton(container, text=label, variable=variable, value=value, command=command, background=root.cget("bg"))
+        self.widget_map[radio_button].pack(side=tk.LEFT, fill=tk.BOTH)
 
     # ------------------------------------------------------------------------------
     # Combined Widget creators
@@ -428,7 +476,8 @@ class MainView:
 
         # Add Widgets
         self.create_button(container, "GENERATE", self.button_generate, on_click=self.generate_button_on_click, height=2, bg="#D6DBDF")
-        self.create_button(container, "SCREENSHOT", self.button_screenshot, on_click=self.button_screenshot_on_click, height=2, bg="#F8F9F9")
+        self.create_button(container, "SCREENSHOT SCREEN", self.button_screenshot_screen, on_click=self.button_screenshot_screen_on_click, height=2, bg="#F8F9F9")
+        self.create_button(container, "SCREENSHOT GRID", self.button_screenshot_grid, on_click=self.button_screenshot_grid_on_click, height=2, bg="#F8F9F9")
 
     def generate_button_on_click(self):
         self.toggle_section_grid_manipulation(True)
@@ -486,9 +535,9 @@ class MainView:
         label_header.pack()
 
         # Create section for specific algorithm
-        # self.create_section_algorithm(tab, container)
         self.create_section_algorithm_configuration(tab, container)
         self.create_section_algorithm_manipulation(tab, container)
+        self.create_section_algorithm_presets(tab, container)
 
         # Add container to root
         root.add(container, text="{:^20}".format(tab.nickname))
@@ -504,9 +553,17 @@ class MainView:
     def create_section_algorithm_manipulation(self, tab, root):
         # Create container
         container = tk.LabelFrame(root, text="Algorithm Manipulation", background=root.cget("bg"))
-        container.pack(fil=tk.X, padx=10, pady=(0, self.padding["regular"]))
+        container.pack(fill=tk.X, padx=10, pady=(0, self.padding["regular"]))
 
         if(tab.view.create_section_manipulation(container) == False):
+            container.destroy()
+
+    def create_section_algorithm_presets(self, tab, root):
+        # Create container
+        container = tk.LabelFrame(root, text="Presets", background=root.cget("bg"))
+        container.pack(fill=tk.X, padx=10, pady=(0, self.padding["regular"]))
+
+        if(tab.view.create_section_presets(container) == False):
             container.destroy()
 
     ################################################################################

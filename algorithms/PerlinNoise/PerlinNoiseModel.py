@@ -5,6 +5,11 @@ from AlgorithmModel import AlgorithmModel
 from perlin_noise import PerlinNoise
 
 class PerlinNoiseModel(AlgorithmModel):
+    def __init__(self):
+        super().__init__()
+        self.nonsolid = 1
+        self.solid = -1
+
     # Override implementation
     def run(self, variables):
         self.lower_bound = variables["lower_bound"]
@@ -14,6 +19,9 @@ class PerlinNoiseModel(AlgorithmModel):
                                    variables["height"], 
                                    variables["octave"],
                                    variables["show_perlin_noise"])
+        
+        if(not variables["show_perlin_noise"] and variables["apply_cellular_automata"]):
+            self.apply_cellular_automata()
         
     # Override parent
     def color_grid(self, grid):
@@ -36,23 +44,113 @@ class PerlinNoiseModel(AlgorithmModel):
     ################################################################################
     def generate_perlin_worm_point(self, x, y, perlin_noise_value):
         if(perlin_noise_value > self.lower_bound and perlin_noise_value < self.upper_bound):
-            self.grid[y][x] = 1 # NonSolid
+            self.grid[y][x] = self.nonsolid # NonSolid
         else:
-            self.grid[y][x] = -1 # Solid
+            self.grid[y][x] = self.solid # Solid
 
     def generate_perlin_noise(self, width, height, octave, show_perlin_noise):
-
         noise = PerlinNoise(octaves=octave, seed=self.seed)
         for y in range(0, height):
             for x in range(0, width):
-                perlin_noise_value = noise([x/(width*2), y/(height*2)])
+                normalized_x = x / (width)
+                normalized_y = y / (height)
+                perlin_noise_value = noise([normalized_x, normalized_y])
 
-                if(not show_perlin_noise):
+                if not show_perlin_noise:
                     self.generate_perlin_worm_point(x, y, perlin_noise_value)
                 else:
                     self.grid[y][x] = perlin_noise_value
 
-                # if(perlin_noise > lower_bound and perlin_noise < upper_bound):
-                #     self.grid[y][x] = 0
+    def apply_cellular_automata(self):
+        border_size = 4
+        nonsolid_odds = 0.0
 
-        # self.grid = [[noise([i/xpix, j/ypix]) for j in range(xpix)] for i in range(ypix)]
+        # Randomize borders
+        for y in range(0, self.height):
+            for x in range(0, self.width):
+                if(y >= border_size and y <= self.height-border_size and
+                   x >= border_size and x <= self.width-border_size):
+                    continue
+
+                if(self.grid[y][x] == 1):
+                    nonsolid_odds = 0.8
+                else:
+                    nonsolid_odds = 0.6
+
+                # Calculate chance
+                chance = random.random()
+                # Determine if cell should be nonsolid
+                self.grid[y][x] = 1 if chance <= nonsolid_odds else -1
+
+        # Apply Cellular automata
+        for _ in range(0, 10):
+            self.generate_iteration(4, 3)
+
+
+    def count_solid_neighbors(self, y, x):
+        count = 0
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                # Skip calling cell
+                if(dy == 0 and dx == 0):
+                    continue
+
+                # Check if neighbor is in bounds
+                ny = y + dy
+                nx = x + dx
+                if(ny < 0 or nx < 0 or ny >= self.height or nx >= self.width):
+                    continue
+
+                # Count solid neighbors
+                if(self.grid[ny][nx] == self.solid):
+                    count += 1
+
+        return count
+
+
+    def generate_iteration(self, num_to_turn_solid, num_to_turn_nonsolid):
+        new_grid = [[self.grid[y][x] for x in range(self.width)] for y in range(self.height)]
+        # Set the border elements to -1
+        for y in range(self.height):
+            new_grid[y][0] = self.solid  # first column
+            new_grid[y][-1] = self.solid # last column
+
+        for x in range(self.width):
+            new_grid[0][x] = self.solid  # first row
+            new_grid[-1][x] = self.solid  # last row
+
+        border_size = 5
+        for y in range(0, self.height):
+            for x in range(0, self.width):
+                # Exclude border cells
+                if(y == 0 or x == 0 or y == self.height-1 or x == self.width-1):
+                    new_grid[y][x] = self.solid # Turn solid automatically
+                    continue
+
+                if(y >= border_size and y <= self.height-border_size and
+                   x >= border_size and x <= self.width-border_size):
+                    continue
+                
+                num_solid_neighbors = self.count_solid_neighbors(y, x)
+
+                # If current cell is Solid
+                if(self.grid[y][x] == self.solid):
+                    if(num_solid_neighbors < num_to_turn_nonsolid):
+                        # Cell turns nonsolid due to under/overpopulation
+                        new_grid[y][x] = self.nonsolid
+                    else :
+                        # Cell remains solid
+                        new_grid[y][x] = self.solid
+                
+                # If current cell is NonSolid
+                elif(self.grid[y][x] == self.nonsolid):
+                    if(num_solid_neighbors > num_to_turn_solid):
+                        # Cell turns solid due to reproduction
+                        new_grid[y][x] = self.solid
+                    else:
+                        # Cell remains nonsolid
+                        new_grid[y][x] = self.nonsolid
+
+        self.grid = new_grid
+
+

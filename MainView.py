@@ -7,14 +7,17 @@ from PIL import Image, ImageGrab, ImageTk
 from datetime import datetime
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from graders.RoughnessGrader import RoughnessGrader
+from tabs.GraderTabView import GraderTabView
 
-class Tab:
+class Algorithm:
     def __init__(self, full_name, nickname, color, view, order):
         self.full_name = full_name
         self.nickname = nickname
         self.color = color
         self.view = view
         self.order = order
+        
+        self.cbox = self.nickname
 
 class MainView:
     def __init__(self):
@@ -64,7 +67,7 @@ class MainView:
 
 
     def load_algorithms(self):
-        self.tabs = []
+        self.list_algorithms = []
 
         # Get a list of algorithm folders
         algorithm_folder_name = "algorithms"
@@ -86,15 +89,15 @@ class MainView:
             # Access class
             view_class = getattr(view_module, f'{algorithm}View', None)
 
-            # Create Tab data object
-            tab = Tab(full_name=algorithm_full_name, nickname=algorithm_nickname, view=view_class(self, algorithm_full_name), color=algorithm_color, order=algorithm_order)
-            self.tabs.append(tab)
+            # Create algorithm data object
+            algorithm = Algorithm(full_name=algorithm_full_name, nickname=algorithm_nickname, view=view_class(self, algorithm_full_name), color=algorithm_color, order=algorithm_order)
+            self.list_algorithms.append(algorithm)
 
-        # Order tabs accordingly
-        self.tabs = sorted(self.tabs, key=lambda x: x.order)
+        # Order list_algorithms accordingly
+        self.list_algorithms = sorted(self.list_algorithms, key=lambda x: x.order)
 
         # Set algorithm view to first tab
-        self.algorithm_view = self.tabs[0]
+        self.algorithm_view = self.list_algorithms[0]
 
     ################################################################################
     # Getters for widget values
@@ -120,6 +123,9 @@ class MainView:
 
     def get_entry_seed(self):
         return self.get_entry_value_int(self.entry_seed)
+    
+    def get_list_algorithms(self):
+        return self.list_algorithms
 
     ################################################################################
     # Setters for widgets
@@ -148,6 +154,9 @@ class MainView:
     def toggle_widget_state(self, entry, new_state):
         self.widget_map[entry].config(state=new_state)
 
+    def set_cbox(self, cbox, value):
+        self.widget_map[cbox].set(value)
+
     ################################################################################
     # Helper Methods
     ################################################################################
@@ -158,6 +167,9 @@ class MainView:
     def show_output_grid(self, figure):
         # Clear previous canvas
         self.destroy_prev_canvas()
+
+        for child in self.output_frame.winfo_children():
+            child.destroy()
 
         # Embed the Matplotlib plot in the output frame
         self.canvas = FigureCanvasTkAgg(figure, master=self.output_frame) 
@@ -314,7 +326,7 @@ class MainView:
     # ------------------------------------------------------------------------------
     # Checkbox creators
     # ------------------------------------------------------------------------------
-    def create_single_checkbox(self, root, label, ctrl_var, def_val=False):
+    def create_single_checkbox(self, root, label, ctrl_var, def_val=False, command=None):
         # Instantiate control variable
         self.widget_map[ctrl_var] = tk.BooleanVar()
         self.widget_map[ctrl_var].set(def_val)
@@ -324,7 +336,7 @@ class MainView:
         container.pack(fill=tk.BOTH, padx=(self.padding["small"],self.padding["regular"]), pady=(0, self.padding["small"]))
 
         # Create checkbox and assign it the control variable
-        checkbox = tk.Checkbutton(container, text=f"{label}:", variable=self.widget_map[ctrl_var], background=container.cget("bg"))
+        checkbox = tk.Checkbutton(container, text=f"{label}", variable=self.widget_map[ctrl_var], command=command, background=container.cget("bg"))
         checkbox.pack(side=tk.LEFT, fill=tk.BOTH)
 
     # ------------------------------------------------------------------------------
@@ -402,7 +414,7 @@ class MainView:
         self.widget_map[self.cbox_using_seed].set(False)
 
         # Create checkbox and assign it the control variable
-        checkbox = tk.Checkbutton(container, text=f"Set Seed", variable=self.widget_map[self.cbox_using_seed], command=toggle_entry_seed_state, background=root.cget("bg"))
+        checkbox = tk.Checkbutton(container, text=f"Set Seed", variable=self.widget_map[self.cbox_using_seed], command=toggle_entry_seed_state)#, background=root.cget("bg"))
         checkbox.pack(side=tk.LEFT)            
 
         # Add entry to container
@@ -551,10 +563,9 @@ class MainView:
     def create_specific_frame(self, root):
         # Function to switch view based on selected tab
         def switch_view(event):
-            selected_tab_index = container.index(container.select())
-            self.algorithm_view = self.tabs[selected_tab_index]
+            selected_index = container.index(container.select())
+            self.algorithm_view = self.list_algorithms[selected_index]
             self.widget_map[self.button_generate].config(command=self.generate_button_on_click)
-            # print(f"changed tab! : {self.tabs[selected_tab_index].full_name}")
 
         # Create notebook tab style
         style = ttk.Style(root)
@@ -565,49 +576,49 @@ class MainView:
         container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         container.bind("<<NotebookTabChanged>>", switch_view)
 
-        # Create tabs dynamically
-        for tab in self.tabs:
-            self.create_tab(container, tab)
+        # Create algorithm tabs dynamically
+        for algorithm in self.list_algorithms:
+            self.create_tab(container, algorithm)
 
-    def create_tab(self, root, tab):
+    def create_tab(self, root, algorithm):
         # Create container
-        container = tk.Frame(root, bg=tab.color)
+        container = tk.Frame(root, bg=algorithm.color)
         container.pack(side=tk.LEFT)
 
         # Create label header
-        label_header = tk.Label(container, text=f"{tab.full_name}", font=("Helvetica", 12, "bold"), background=container.cget("bg"))
+        label_header = tk.Label(container, text=f"{algorithm.full_name}", font=("Helvetica", 12, "bold"), background=container.cget("bg"))
         label_header.pack()
 
         # Create section for specific algorithm
-        self.create_section_algorithm_configuration(tab, container)
-        self.create_section_algorithm_manipulation(tab, container)
-        self.create_section_algorithm_presets(tab, container)
+        self.create_section_algorithm_configuration(algorithm, container)
+        self.create_section_algorithm_manipulation(algorithm, container)
+        self.create_section_algorithm_presets(algorithm, container)
 
         # Add container to root
-        root.add(container, text="{:^20}".format(tab.nickname))
+        root.add(container, text="{:^20}".format(algorithm.nickname))
 
-    def create_section_algorithm_configuration(self, tab, root):
+    def create_section_algorithm_configuration(self, algorithm, root):
         # Create container
         container = tk.LabelFrame(root, text="Algorithm Configuration", background=root.cget("bg"))
         container.pack(fill=tk.X, padx=10, pady=(0, self.padding["regular"]))
 
         # Create algorithm section and add to container
-        tab.view.create_section_configuration(container)
+        algorithm.view.create_section_configuration(container)
 
-    def create_section_algorithm_manipulation(self, tab, root):
+    def create_section_algorithm_manipulation(self, algorithm, root):
         # Create container
         container = tk.LabelFrame(root, text="Algorithm Manipulation", background=root.cget("bg"))
         container.pack(fill=tk.X, padx=10, pady=(0, self.padding["regular"]))
 
-        if(tab.view.create_section_manipulation(container) == False):
+        if(algorithm.view.create_section_manipulation(container) == False):
             container.destroy()
 
-    def create_section_algorithm_presets(self, tab, root):
+    def create_section_algorithm_presets(self, algorithm, root):
         # Create container
         container = tk.LabelFrame(root, text="Presets", background=root.cget("bg"))
         container.pack(fill=tk.X, padx=10, pady=(0, self.padding["regular"]))
 
-        if(tab.view.create_section_presets(container) == False):
+        if(algorithm.view.create_section_presets(container) == False):
             container.destroy()
 
     ################################################################################
@@ -615,8 +626,15 @@ class MainView:
     ################################################################################
     def create_output_frame(self, root):
         # Create a panel for the Matplotlib plot on the right side
-        self.output_frame = tk.Frame(root)
+        self.output_frame = tk.Frame(root, width=400, height=400, background="white")
         self.output_frame.pack(side=tk.LEFT)
+        self.output_frame.pack_propagate(False)
+
+        container = self.output_frame        
+
+        # Create label header
+        label_header = tk.Label(container, text=f"Generate Grid", font=("Helvetica", 12, "bold"), background=container.cget("bg"))
+        label_header.pack(expand=True)
     
 
     ################################################################################
@@ -637,7 +655,7 @@ class MainView:
 
         # Create tabs
         self.create_generation_tab(container)
-        self.create_grader_tab(container)
+        GraderTabView(self).create_tab(container)
 
     def create_generation_tab(self, root):
         # Create container 
@@ -650,17 +668,5 @@ class MainView:
 
         # Add container to root
         root.add(container, text="Generation")
-
-    def create_grader_tab(self, root):
-        # Create container
-        container = tk.Frame(root)
-        container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        # Create label header
-        label_header = tk.Label(container, text=f"Grader Tab", font=("Helvetica", 12, "bold"), background=container.cget("bg"))
-        label_header.pack()
-
-        # Add container to root
-        root.add(container, text="Grader")
 
 view = MainView()

@@ -1,13 +1,14 @@
 import tkinter as tk
+from tabs.TabView import TabView
 
 class GradeMetric:
     def __init__(self, cbox, name):
         self.cbox = cbox
         self.name = name
 
-class GraderTabView:
-    def __init__(self, main_view):
-        self.mv = main_view
+class GraderTabView(TabView):
+    def __init__(self, root):
+        super(GraderTabView, self).__init__(root)
 
         # Widget variables
         self.cbox_metric_roughness = "cbox_metric_roughness"
@@ -23,7 +24,7 @@ class GraderTabView:
         if(value == False):
             return
         for item in list:
-            self.mv.set_cbox(item.cbox, True)
+            self.set_cbox(item.cbox, True)
 
     # Method to create overall tab view
     def create_tab(self, root):
@@ -58,9 +59,9 @@ class GraderTabView:
 
         # Create metric checkboxes
         for metric in self.list_grade_metrics:
-            self.mv.create_single_checkbox(container, metric.name, metric.cbox, def_val=False, command=lambda: self.mv.set_cbox(self.cbox_metric_all, False)) 
+            self.create_single_checkbox(container, metric.name, metric.cbox, def_val=False, command=lambda: self.set_cbox(self.cbox_metric_all, False)) 
         # Create select all checkbox
-        self.mv.create_single_checkbox(container, "SELECT ALL", self.cbox_metric_all, def_val=False, command=lambda: self.set_all_cbox_in_list(self.list_grade_metrics, self.mv.get_entry_value_bool(self.cbox_metric_all)))
+        self.create_single_checkbox(container, "SELECT ALL", self.cbox_metric_all, def_val=False, command=lambda: self.set_all_cbox_in_list(self.list_grade_metrics, self.get_entry_value_bool(self.cbox_metric_all)))
     
     # Method to create algorithms section
     def create_algorithms_section(self, root):
@@ -73,10 +74,10 @@ class GraderTabView:
         label_header.pack()
 
         # Create algorithm checkboxes
-        for tab in self.mv.get_list_algorithms():
-            self.mv.create_single_checkbox(container, tab.full_name, tab.cbox, def_val=False, command=lambda: self.mv.set_cbox(self.cbox_algorithm_all, False))
+        for tab in self.get_list_algorithms():
+            self.create_single_checkbox(container, tab.full_name, tab.cbox, def_val=False, command=lambda: self.set_cbox(self.cbox_algorithm_all, False))
         # Create select all checkbox
-        self.mv.create_single_checkbox(container, "SELECT ALL", self.cbox_algorithm_all, def_val=False, command=lambda: self.set_all_cbox_in_list(self.mv.get_list_algorithms(), self.mv.get_entry_value_bool(self.cbox_algorithm_all)))    
+        self.create_single_checkbox(container, "SELECT ALL", self.cbox_algorithm_all, def_val=False, command=lambda: self.set_all_cbox_in_list(self.get_list_algorithms(), self.get_entry_value_bool(self.cbox_algorithm_all)))    
 
     # Method to create output section
     def create_grade_output_section(self, root):

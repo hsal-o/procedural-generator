@@ -4,7 +4,6 @@ from algorithms.CellularAutomata.CellularAutomataModel import CellularAutomataMo
 class CellularAutomataController(AlgorithmController):
     # Override implementation
     def run(self, is_seed_provided):
-        print("CellularAutomataController specific run implementation")
         super().run(is_seed_provided)
         self.view.toggle_button_single_iteration(True)
 

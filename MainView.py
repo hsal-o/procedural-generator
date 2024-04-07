@@ -26,4 +26,4 @@ class MainView:
 
         # Create tabs
         GenerationTabView(self.root).create(container)
-        # GraderTabView(self.root).create_tab(container)
+        GraderTabView(self.root).create(container)

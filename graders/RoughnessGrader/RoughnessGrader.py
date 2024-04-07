@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import math
 
-class RoughnessGrader():
+class RoughnessGrader:
     def get_perimeter(self, contours):
         perimeter = 0
         for c in contours:
@@ -16,7 +16,7 @@ class RoughnessGrader():
             area += cv2.contourArea(c)
         return area
     
-    def get_score(self, image, do_show_contours=False):
+    def get_score(self, image, binary_grid, do_show_contours=False):
         # Turn image grey for higher accuracy
         image_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -32,6 +32,9 @@ class RoughnessGrader():
         # Calculate perimeter
         perimeter = self.get_perimeter(contours)
 
+        if perimeter == 0:
+            return 0
+
         # Calculate measured area
         measured_area = self.get_area(contours)
 
@@ -43,7 +46,7 @@ class RoughnessGrader():
         roughness = measured_area / perimeter
 
         # Calculate score
-        score = roughness / maximum_roughness
+        score = 1 - (roughness / maximum_roughness)
 
         if(do_show_contours):
             self.show_counters(image, contours)

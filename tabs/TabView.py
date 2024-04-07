@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from ResourceManager import ResourceManager
 
 class TabView:
     def __init__(self, root):
@@ -11,6 +12,9 @@ class TabView:
         }
 
         self.widget_map = {}
+
+        self.list_algorithms = ResourceManager().get_fitted_algorithm_list(self)
+        self.list_grade_metrics = ResourceManager().get_list_grade_metrics()
 
     ################################################################################
     # Getters for widget values

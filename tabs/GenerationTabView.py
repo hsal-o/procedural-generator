@@ -1,4 +1,3 @@
-import importlib
 import os
 import tkinter as tk
 from tkinter import ttk
@@ -7,12 +6,13 @@ import cv2
 from PIL import Image, ImageGrab, ImageTk
 from datetime import datetime
 from tabs.TabView import TabView
-from ResourceManager import ResourceManager
 
 import sys
 sys.path.append("..")
 
-from graders.RoughnessGrader import RoughnessGrader
+from graders.RoughnessGrader.RoughnessGrader import RoughnessGrader
+from graders.ConnectivityGrader.ConnectivityGrader import ConnectivityGrader
+from graders.OpennessGrader.OpennessGrader import OpennessGrader
 
 class GenerationTabView(TabView):
     def __init__(self, root):
@@ -43,10 +43,8 @@ class GenerationTabView(TabView):
         self.button_screenshot_screen = "button_screenshot_screen"
         self.button_screenshot_grid = "button_screenshot_grid"
 
-        self.list_algorithms = ResourceManager().get_fitted_algorithm_list(self)
-
         # Set algorithm view to first tab
-        self.algorithm_view = self.list_algorithms[0]
+        self.algorithm_view = self.get_list_algorithms()[0]
 
 
     def get_entry_seed(self):
@@ -185,7 +183,7 @@ class GenerationTabView(TabView):
         # Function to switch view based on selected tab
         def switch_view(event):
             selected_index = container.index(container.select())
-            self.algorithm_view = self.list_algorithms[selected_index]
+            self.algorithm_view = self.get_list_algorithms()[selected_index]
             self.widget_map[self.button_generate].config(command=self.generate_button_on_click)
 
         # Create notebook tab style
@@ -198,7 +196,7 @@ class GenerationTabView(TabView):
         container.bind("<<NotebookTabChanged>>", switch_view)
 
         # Create algorithm tabs dynamically
-        for algorithm in self.list_algorithms:
+        for algorithm in self.get_list_algorithms():
             self.create_tab(container, algorithm)
 
     def create_tab(self, root, algorithm):
@@ -304,10 +302,14 @@ class GenerationTabView(TabView):
 
     def grade_button_on_click(self):
         # Proof of Concept
-        roughness_grader = RoughnessGrader()
+        binary_grid = self.algorithm_view.view.get_binary_grid()
         raw_grid_figure = self.algorithm_view.view.get_raw_grid_figure()
         image_path = cv2.imread(self.generate_image_path(raw_grid_figure), cv2.IMREAD_UNCHANGED)
-        print(f"Roughness:{roughness_grader.get_score(image_path)}")
+
+        print(f"Connectivity: {ConnectivityGrader().get_score(image_path, binary_grid)}")
+        print(f"Roughness: {RoughnessGrader().get_score(image_path, binary_grid)}")
+        print(f"Openness: {OpennessGrader().get_score(image_path, binary_grid)}")
+        print()
 
     def button_screenshot_screen_on_click(self):
         # Get the Tkinter window dimensions

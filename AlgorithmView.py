@@ -41,6 +41,9 @@ class AlgorithmView(ABC):
     def get_raw_grid_figure(self):
         return self.controller.get_raw_grid_figure()
     
+    def get_binary_grid(self):
+        return self.controller.get_binary_grid()
+    
     ################################################################################
     # Setters
     ################################################################################

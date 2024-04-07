@@ -29,14 +29,16 @@ class AlgorithmController(ABC):
         self.variables = variables
         self.model.set_grid(self.variables["width"], self.variables["height"])
          
-    def run(self, is_seed_provided):
+    def run(self, is_seed_provided=False):
         # FIX
         if is_seed_provided:
             self.seed = self.view.get_entry_seed()
         else:
             self.seed = self.get_random_seed()
 
-        self.view.set_entry_seed(self.seed)
+        # If view is not None (We are not in grading mode)
+        if(self.view != None):
+            self.view.set_entry_seed(self.seed)
 
         self.model.generate(self.seed, self.variables)
 
@@ -88,7 +90,12 @@ class AlgorithmController(ABC):
         plt.close(figure)
 
         return figure
+    
+    def get_seed(self):
+        return self.seed
 
     def get_raw_grid_figure(self):
         return self.model.get_grid()
     
+    def get_binary_grid(self):
+        return self.model.get_binary_grid()

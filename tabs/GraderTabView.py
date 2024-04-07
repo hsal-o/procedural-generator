@@ -4,13 +4,7 @@ from tkinter import messagebox
 from tabs.TabView import TabView
 from PIL import Image
 import cv2
-import importlib
-import os
-
-# class GradeMetric:
-#     def __init__(self, cbox, name):
-#         self.cbox = cbox
-#         self.name = name
+import threading
 
 class GraderTabView(TabView):
     def __init__(self, root):
@@ -86,9 +80,9 @@ class GraderTabView(TabView):
         # Create Button
         self.create_button(button_container, "RUN", self.button_run, on_click=self.run_button_on_click, height=2, bg="#D6DBDF")
 
-        # # Create Progress bar
-        # self.widget_map[self.progress_bar]  = ttk.Progressbar(container)
-        # self.widget_map[self.progress_bar].pack(padx=self.padding["small"], fill=tk.X)
+        # Create Progress bar
+        self.widget_map[self.progress_bar]  = ttk.Progressbar(container)
+        self.widget_map[self.progress_bar].pack(padx=self.padding["small"], fill=tk.X)
 
 
     # Method to create output section
@@ -144,11 +138,18 @@ class GraderTabView(TabView):
             return
 
         # Continue to run without errors
-        self.run_trials(selected_metrics, selected_algorithms, self.get_entry_value_int(self.entry_trial_count))
+        self.run_trials_threaded(selected_metrics, selected_algorithms, self.get_entry_value_int(self.entry_trial_count))
+
+    def run_trials_threaded(self, selected_metrics, selected_algorithms, trial_count):
+        # Create seperate thread
+        thread = threading.Thread(target=self.run_trials, args=(selected_metrics, selected_algorithms, trial_count))
+        thread.start()
 
     def run_trials(self, selected_metrics, selected_algorithms, trial_count):
-        # self.widget_map[self.progress_bar].configure(value = 0)
-        # self.widget_map[self.progress_bar].configure(maximum = trial_count*len(selected_algorithms))
+        self.widget_map[self.progress_bar].configure(value=0)
+
+        total_steps = trial_count * len(selected_algorithms)
+        self.widget_map[self.progress_bar].configure(maximum = total_steps)
 
         print(f"Average metric score results for {trial_count} trials")
         for algorithm in selected_algorithms:
@@ -179,6 +180,7 @@ class GraderTabView(TabView):
                     metric_scores[metric.name] += round(score, 6)
 
                 # self.widget_map[self.progress_bar].step(1)
+                self.root.after(100, self.update_progress_bar, 1)
 
             # print(f"~~SEED: {controller.get_seed()}")
             for metric in metric_scores:
@@ -186,8 +188,9 @@ class GraderTabView(TabView):
             print(f"[{algorithm.full_name}] //")
             print(f"{metric_scores}")
 
-
         print()
+
+        messagebox.showinfo("Completed Trials", "Trials have been completed successfully!")
 
 
 
@@ -231,4 +234,7 @@ class GraderTabView(TabView):
         image.save(image_path)
 
         return image_path
+    
+    def update_progress_bar(self, step):
+        self.widget_map[self.progress_bar].step(step)
     

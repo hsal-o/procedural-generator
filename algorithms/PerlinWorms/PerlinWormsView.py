@@ -1,10 +1,10 @@
 from AlgorithmView import AlgorithmView
-from algorithms.PerlinNoise.PerlinNoiseController import PerlinNoiseController
+from algorithms.PerlinWorms.PerlinWormsController import PerlinWormsController
 
-class PerlinNoiseView(AlgorithmView):
+class PerlinWormsView(AlgorithmView):
     # Override implementation
     def initialize_attributes(self):
-        self.controller = PerlinNoiseController(self)
+        self.controller = PerlinWormsController(self)
 
         # Entries
         self.entry_octave = self.set_widget_id("entry_octave")
@@ -24,7 +24,7 @@ class PerlinNoiseView(AlgorithmView):
 
         # Add Checboxes
         self.mv.create_single_checkbox(root, "Show Raw Perlin Noise", self.cbox_show_perlin_noise, def_val=False)
-        self.mv.create_single_checkbox(root, "Apply Cellular Automata", self.cbox_apply_cellular_automata, def_val=False)
+        self.mv.create_single_checkbox(root, "Apply Cellular Automata", self.cbox_apply_cellular_automata, def_val=True)
 
 
     # Override implementation

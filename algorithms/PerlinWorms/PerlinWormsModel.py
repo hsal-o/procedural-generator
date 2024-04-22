@@ -1,10 +1,11 @@
+import numpy as np
 import random
 from math import ceil, floor
 import cavegen.res.colors as colors
 from AlgorithmModel import AlgorithmModel
 from perlin_noise import PerlinNoise
 
-class PerlinNoiseModel(AlgorithmModel):
+class PerlinWormsModel(AlgorithmModel):
     def __init__(self):
         super().__init__()
         self.nonsolid = 1
@@ -38,6 +39,18 @@ class PerlinNoiseModel(AlgorithmModel):
                 color_grid[_y][_x] = color
 
         return color_grid
+    
+    def get_binary_grid(self):
+        binary_grid = [[None for _ in range(self.width)] for _ in range(self.height)]
+
+        for _y in range(self.height):
+            for _x in range(self.width):
+                if(self.grid[_y][_x] == -1):
+                    binary_grid[_y][_x] = 1
+                elif(self.grid[_y][_x] == 1):
+                    binary_grid[_y][_x] = 0
+
+        return binary_grid
 
     ################################################################################
     # Algorithm specific methods

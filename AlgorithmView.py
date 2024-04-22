@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod 
 
 class AlgorithmView(ABC):
+
     def __init__(self, main_view, full_name):
         self.mv = main_view
         self.variables = {}
@@ -39,6 +40,9 @@ class AlgorithmView(ABC):
     
     def get_raw_grid_figure(self):
         return self.controller.get_raw_grid_figure()
+    
+    def get_binary_grid(self):
+        return self.controller.get_binary_grid()
     
     ################################################################################
     # Setters

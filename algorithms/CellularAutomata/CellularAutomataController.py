@@ -3,10 +3,11 @@ from algorithms.CellularAutomata.CellularAutomataModel import CellularAutomataMo
 
 class CellularAutomataController(AlgorithmController):
     # Override implementation
-    def run(self, is_seed_provided):
-        print("CellularAutomataController specific run implementation")
-        super().run(is_seed_provided)
-        self.view.toggle_button_single_iteration(True)
+    def run(self, is_seed_provided=False):
+        super().run(is_seed_provided=is_seed_provided)
+
+        if(self.view != None):
+            self.view.toggle_button_single_iteration(True)
 
     # Override implementation
     def initialize_attributes(self, view):

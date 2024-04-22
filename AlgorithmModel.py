@@ -21,6 +21,9 @@ class AlgorithmModel(ABC):
         color_grid = self.color_grid(self.grid)
         return np.array(color_grid, dtype=np.uint8)
 
+    def get_binary_grid(self):
+        return np.array(self.grid)
+
     def get_width(self):
         return self.width
     

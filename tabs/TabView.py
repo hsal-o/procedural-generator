@@ -1,5 +1,8 @@
+import os
 import tkinter as tk
 from tkinter import ttk
+from datetime import datetime
+from PIL import Image, ImageGrab, ImageTk
 from ResourceManager import ResourceManager
 
 class TabView:
@@ -181,5 +184,63 @@ class TabView:
         self.widget_map[entry] = tk.Entry(container)
         self.widget_map[entry].pack(side=tk.RIGHT)
         self.widget_map[entry].insert(0, def_val) 
+
+
+    # ------------------------------------------------------------------------------
+    # Helper
+    # ------------------------------------------------------------------------------
+    def show_screenshot_popup(self, screenshot, name):
+        def save_screenshot():
+            # Parent folder
+            parent_folder = "screenshots"
+
+            # Define specific screenshots folder
+            screenshots_folder = os.path.join(parent_folder, "screen-screenshots")
+            os.makedirs(screenshots_folder, exist_ok=True)
+
+            # Get the current date and time
+            current_datetime = datetime.now()
+            time_stamp = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+
+            # Make the filename based on the timestamp
+            file_name = f"{screenshots_folder}/{time_stamp}_{name}.png"
+            
+            # Save the screenshot to a file
+            screenshot.save(file_name)
+            popup.destroy()  # Close the popup after saving
+
+        # Create a new Tkinter window
+        popup = tk.Toplevel(self.root)
+        popup.title("Screenshot Preview")
+
+        container = tk.Frame(popup, bg="black")
+        container.pack(fill=tk.BOTH, expand=True)
+
+        # Add a label above the screenshot
+        label = tk.Label(container, text="SCREENSHOT PREVIEW", font=("Helvetica", 14, "bold"), bg=container.cget("background"), fg="white")
+        label.pack(fill=tk.BOTH, expand=True, pady=(self.padding["regular"],0))
+
+        # Bottom container
+        bottom_container = tk.Frame(popup, bg=container.cget("background"))
+        bottom_container.pack(fill=tk.BOTH, expand=True)
+
+        buttons_container = tk.Frame(bottom_container, bg=container.cget("background"))
+        buttons_container.pack(pady=self.padding["regular"])
+
+        button_discard = tk.Button(buttons_container, text=f"Discard", command=popup.destroy, width=12, height=2, background="#E6B0AA")
+        button_discard.pack(side=tk.LEFT, padx=(0,25))
+
+        button_save = tk.Button(buttons_container, text=f"Save", command=save_screenshot, width=12, height=2, background="#A9DFBF")
+        button_save.pack(side=tk.RIGHT)
+
+        # Convert the screenshot to a format that Tkinter can display
+        screenshot_tk = ImageTk.PhotoImage(screenshot)
+
+        # Display the screenshot in a Tkinter label
+        screenshot_label = tk.Label(popup, image=screenshot_tk)
+        screenshot_label.pack()
+
+        # Keep a reference to the ImageTk object to prevent it from being garbage collected
+        screenshot_label.image = screenshot_tk
         
     

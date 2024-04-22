@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import copy
+from ResourceManager import ResourceManager
 
 class OpennessGrader:
 
@@ -57,7 +58,8 @@ class OpennessGrader:
             total_sum += dictionary[key]
         average = weighted_sum / total_sum
 
-        return round(average, 3)
+        # return round(average, ResourceManager().FLOAT_PRECISION)
+        return average
 
     def get_median(self, dictionary):
         # Seems to not gie right answers
@@ -87,7 +89,8 @@ class OpennessGrader:
             total_sum += median_values[i]
         median = total_sum / len(median_values)
 
-        return round(median, 3)
+        # return round(median, ResourceManager().FLOAT_PRECISION)
+        return median
         
     def get_score(self, image_path, orig_grid):
         # Interesting test cases
@@ -156,6 +159,7 @@ class OpennessGrader:
         # Calculate score
         score = (num_nonsolid_desired / num_nonsolid_total)
         
-        return round(score, 3)
+        # return round(score, ResourceManager().FLOAT_PRECISION)
+        return score
 
 

@@ -306,9 +306,14 @@ class GenerationTabView(TabView):
         raw_grid_figure = self.algorithm_view.view.get_raw_grid_figure()
         image_path = cv2.imread(self.generate_image_path(raw_grid_figure), cv2.IMREAD_UNCHANGED)
 
-        print(f"Connectivity: {ConnectivityGrader().get_score(image_path, binary_grid)}")
-        print(f"Roughness: {RoughnessGrader().get_score(image_path, binary_grid)}")
-        print(f"Openness: {OpennessGrader().get_score(image_path, binary_grid)}")
+        connectivity_grade = ConnectivityGrader().get_score(image_path, binary_grid)
+        roughness_grade = RoughnessGrader().get_score(image_path, binary_grid)
+        openness_grade = OpennessGrader().get_score(image_path, binary_grid)
+
+        print(f"Connectivity: {connectivity_grade}")
+        print(f"Roughness: {roughness_grade}")
+        print(f"Openness: {openness_grade}")
+
         print()
 
     def button_screenshot_screen_on_click(self):
@@ -322,11 +327,14 @@ class GenerationTabView(TabView):
         screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
 
         # # Save the screenshot to a file
-        self.show_screenshot_popup(screenshot)
+        self.show_screenshot_popup(screenshot, self.algorithm_view.full_name.replace(' ', '_'))
 
     def button_screenshot_grid_on_click(self):
-       # Create the "screenshots" folder if it doesn't exist
-        screenshots_folder = "grid-screenshots"
+        # Parent folder
+        parent_folder = "screenshots"
+
+        # Define specific screenshots folder
+        screenshots_folder = os.path.join(parent_folder, "grid-screenshots")
         os.makedirs(screenshots_folder, exist_ok=True)
 
         # Get the current date and time
@@ -353,56 +361,6 @@ class GenerationTabView(TabView):
         image.save(file_name)
         image.show()
 
-    def show_screenshot_popup(self, screenshot):
-        def save_screenshot():
-            # Create the "screenshots" folder if it doesn't exist
-            screenshots_folder = "screen-screenshots"
-            os.makedirs(screenshots_folder, exist_ok=True)
-
-            # Get the current date and time
-            current_datetime = datetime.now()
-            time_stamp = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
-
-            # Formulate the filename based on the timestamp
-            file_name = f"{screenshots_folder}/{time_stamp}_{self.algorithm_view.full_name.replace(' ', '_')}.png"
-            
-            # Save the screenshot to a file
-            screenshot.save(file_name)
-            popup.destroy()  # Close the popup after saving
-
-        # Create a new Tkinter window
-        popup = tk.Toplevel(self.root)
-        popup.title("Screenshot Preview")
-
-        container = tk.Frame(popup, bg="black")
-        container.pack(fill=tk.BOTH, expand=True)
-
-        # Add a label above the screenshot
-        label = tk.Label(container, text="SCREENSHOT PREVIEW", font=("Helvetica", 14, "bold"), bg=container.cget("background"), fg="white")
-        label.pack(fill=tk.BOTH, expand=True, pady=(self.padding["regular"],0))
-
-        # Bottom container
-        bottom_container = tk.Frame(popup, bg=container.cget("background"))
-        bottom_container.pack(fill=tk.BOTH, expand=True)
-
-        buttons_container = tk.Frame(bottom_container, bg=container.cget("background"))
-        buttons_container.pack(pady=self.padding["regular"])
-
-        button_discard = tk.Button(buttons_container, text=f"Discard", command=popup.destroy, width=12, height=2, background="#E6B0AA")
-        button_discard.pack(side=tk.LEFT, padx=(0,25))
-
-        button_save = tk.Button(buttons_container, text=f"Save", command=save_screenshot, width=12, height=2, background="#A9DFBF")
-        button_save.pack(side=tk.RIGHT)
-
-        # Convert the screenshot to a format that Tkinter can display
-        screenshot_tk = ImageTk.PhotoImage(screenshot)
-
-        # Display the screenshot in a Tkinter label
-        screenshot_label = tk.Label(popup, image=screenshot_tk)
-        screenshot_label.pack()
-
-        # Keep a reference to the ImageTk object to prevent it from being garbage collected
-        screenshot_label.image = screenshot_tk
 
     def generate_image_path(self, raw_grid_figure):
         # CHECK IF tmp FOLDER EXISTS

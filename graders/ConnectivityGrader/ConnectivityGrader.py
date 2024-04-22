@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import math
+from ResourceManager import ResourceManager
 
 class ConnectivityGrader:
     def get_perimeter(self, contours):
@@ -59,7 +60,8 @@ class ConnectivityGrader:
         # Debug, shows contours
         # self.show_counters(image, contours)
         
-        return round(score, 3)
+        # return round(score, ResourceManager().FLOAT_PRECISION)
+        return score
     
     def show_counters(self, image, contours):
         # Interesting test cases:

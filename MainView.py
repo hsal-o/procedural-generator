@@ -14,7 +14,7 @@ class MainView:
     def create_window(self):
         # Create the main window
         self.root = tk.Tk()
-        self.root.title("Cave Generation")
+        self.root.title("CaveGen Labs")
 
         # Create notebook tab style
         style = ttk.Style(self.root)

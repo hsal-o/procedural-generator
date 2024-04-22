@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 import math
+from ResourceManager import ResourceManager
 
 class RoughnessGrader:
     def get_perimeter(self, contours):
@@ -51,7 +52,8 @@ class RoughnessGrader:
         if(do_show_contours):
             self.show_counters(image, contours)
         
-        return round(score, 3)
+        # return round(score, ResourceManager().FLOAT_PRECISION)
+        return score
     
     def show_counters(self, image, contours):
         # Create an empty image for contours

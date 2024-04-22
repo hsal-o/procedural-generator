@@ -12,6 +12,7 @@ class Algorithm:
         self.view = view                # View this algorithm will be used in
         self.order = order
         self.cbox = "cbox_" + self.nickname
+        self.trial_variables = None
 
     def set_view(self, view):
         self.view = self.view_class(view, self.full_name)
@@ -26,6 +27,7 @@ class GradeMetric:
 
 class ResourceManager:
     _instance = None
+    FLOAT_PRECISION = 6
     
     def __new__(self):
         if self._instance is None:

@@ -28,15 +28,6 @@ class OpennessGrader:
                 
         return -1
 
-    def print_grid(self, grid):
-        print("==========================PRINT GRID==========================")
-        for i in range(0, len(grid)):
-            string = "["
-            for j in range(0, len(grid[0])):
-                string = string + str(grid[i][j].value) + " "
-            print(string + "]")
-        print("==============================================================")
-
     def get_value_counts(self, grid):
         value_counts = {}
         i = 1
@@ -93,12 +84,6 @@ class OpennessGrader:
         return median
         
     def get_score(self, image_path, orig_grid):
-        # Interesting test cases
-        # 1911696689 // Perlin worms
-        # 4162841496 // Example of accurate grade (Would want to discard) // Perlin worms
-        # 586570091 // Cellular automata (near equal openness/narrowness)
-        # 551438554 // Cellular automata (near eqla openness/narrowness)
-
         # Create empty grid
         grid = np.empty_like(orig_grid, dtype=object)
 
@@ -145,9 +130,6 @@ class OpennessGrader:
 
         # Count Cell value occurences
         value_counts = self.get_value_counts(grid)
-
-        # print(f"\taverage: {self.find_average(value_counts)}")
-        # print(f"\tmedian: {self.find_median(value_counts)}")
 
         # Get total number of nonsolid
         num_nonsolid_total = sum(value_counts.values())

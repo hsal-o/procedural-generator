@@ -311,7 +311,7 @@ class GenerationTabView(TabView):
         openness_grade = OpennessGrader().get_score(image_path, binary_grid)
 
         print(f"Connectivity: {connectivity_grade}")
-        print(f"Roughness: {roughness_grade}")
+        print(f"Complexity: {roughness_grade}")
         print(f"Openness: {openness_grade}")
 
         print()

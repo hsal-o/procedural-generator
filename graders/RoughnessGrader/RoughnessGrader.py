@@ -17,6 +17,16 @@ class RoughnessGrader:
             area += cv2.contourArea(c)
         return area
     
+    def filter_parent_contours(self, contours, hierarchy):
+        parent_contours = []
+        child_contours = []
+        for i, h in enumerate(hierarchy[0]):
+            if h[3] == -1:  # If the contour has no parent (its a parent contour)
+                parent_contours.append(contours[i])
+            else:
+                child_contours.append(contours[i])
+        return parent_contours, child_contours
+    
     def get_score(self, image, binary_grid, do_show_contours=False):
         # Turn image grey for higher accuracy
         image_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -30,31 +40,33 @@ class RoughnessGrader:
         # Find contours
         contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Calculate perimeter
-        perimeter = self.get_perimeter(contours)
+        # Filter out parent and child contours
+        parent_contours, child_contours = self.filter_parent_contours(contours, hierarchy)
 
-        if perimeter == 0:
-            return 0
+        # Calculate perimeter and area for parent contours
+        parent_perimeter = self.get_perimeter(parent_contours)
+        parent_area = self.get_area(parent_contours)
 
-        # Calculate measured area
-        measured_area = self.get_area(contours)
+        # Calculate perimeter and area for child contours (holes)
+        child_perimeter = self.get_perimeter(child_contours)
+        child_area = self.get_area(child_contours)
+
+        # Subtract hole area from parent, adding perimeter
+        parent_perimeter += child_perimeter
+        parent_area -= child_area
 
         # Calculate maximum roughness
-        radius = math.sqrt(measured_area / math.pi)
-        maximum_roughness = radius / 2
+        parent_radius = math.sqrt(parent_area / math.pi)
+        parent_maximum_roughness = parent_radius / 2
 
-        # Calculate actual roughness
-        roughness = measured_area / perimeter
+        # Calculate actual roughness for parent contours
+        parent_roughness = parent_area / parent_perimeter
 
-        # Calculate score
-        score = 1 - (roughness / maximum_roughness)
+        # Normalize complexity score
+        score = 1 - (parent_roughness / parent_maximum_roughness)
 
-        if(do_show_contours):
-            self.show_counters(image, contours)
-        
-        # return round(score, ResourceManager().FLOAT_PRECISION)
         return score
-    
+
     def show_counters(self, image, contours):
         # Create an empty image for contours
         image_contours = np.zeros(image.shape)

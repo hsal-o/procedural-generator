@@ -34,7 +34,7 @@ class ConnectivityGrader:
         return processed_image
     
     def get_score(self, image, binary_grid, do_show_contours=False):
-        image = self.preprocess_image(image)
+        # image = self.preprocess_image(image)
 
         # Turn image grey for higher accuracy
         image_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -55,12 +55,12 @@ class ConnectivityGrader:
         contours = self.remove_dwarf_contours(contours)
 
         # score = len(contours)
-        score = math.exp(-0.25 * math.exp(1) * (len(contours) - 1)) # e^(0.25e(x-1))
+        # score = math.exp(-0.25 * math.exp(1) * (len(contours) - 1)) # e^(-0.25e(x-1))
+        score = 1.0 / (2 ** (len(contours) - 1)) # 1 / 2^(x-1)
 
         # Debug, shows contours
         # self.show_counters(image, contours)
         
-        # return round(score, ResourceManager().FLOAT_PRECISION)
         return score
     
     def show_counters(self, image, contours):
